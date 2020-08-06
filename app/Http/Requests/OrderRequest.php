@@ -7,6 +7,7 @@ use Illuminate\Validation\Rule;
 use App\Rules\OptionOrderTypeRule;
 use App\Rules\InstrumentTypeRule;
 use App\Rules\IsFutureDateRule;
+use App\Rules\WeekDayRule;
 
 class OrderRequest extends FormRequest
 {
@@ -48,12 +49,14 @@ class OrderRequest extends FormRequest
             'bought_on' => [
                     'required_if:order_type,b',
                     'date_format:Y-m-d',
-                    new IsFutureDateRule
+                    new IsFutureDateRule,
+                    new WeekDayRule,
                 ],
             'sold_on' => [
                     'required_if:order_type,s',
                     'date_format:Y-m-d',
-                    new IsFutureDateRule
+                    new IsFutureDateRule,
+                    new WeekDayRule,
                 ],
         ];
     }

@@ -25,7 +25,7 @@ class UserController extends Controller
     public function store(AuthenticateRequest $request)
     {
         $user = User::firstOrCreate(['mobile' => $request->mobile]);
-        $user->token = $user->createToken('auth')->plainTextToken;
+        $user->token = $user->createToken('auth-'.$request->header('Device-id'))->plainTextToken;
         
         $generatedOtpObj = $this->generateOtp();
 
@@ -56,7 +56,9 @@ class UserController extends Controller
             $user->save();
         }, 2);
         
-        return response()->success([ 'token' => $user->createToken('device-id')->plainTextToken ], 'OTP Verified');
+        return response()->success([
+            'token' => $user->createToken($request->header('Device-id'))->plainTextToken 
+        ], 'OTP Verified');
     }
 
     /*

@@ -15,14 +15,14 @@ use Illuminate\Support\Facades\Route;
 */
 Route::post('auth', 'UserController@store');
 
-Route::middleware(['auth:sanctum', 'mobileVerified'])->group(function() {
-
-    Route::apiResource('users', 'UserController')->except('store');;
+Route::middleware(['auth:sanctum'])->group(function() {
     Route::post('verify-otp', 'UserController@otpVerification');
-
-    Route::get('exchanges', 'StockExchangeController');
-    Route::get('instruments', 'InstrumentTypeController');
-    Route::get('trade-types', 'TradeTypeController');
-
-    Route::apiResource('orders', 'OrderController');
+    
+    Route::middleware(['authorize', 'mobileVerified'])->group(function() {
+        Route::apiResource('users', 'UserController')->except('store');;
+        Route::get('exchanges', 'StockExchangeController');
+        Route::get('instruments', 'InstrumentTypeController');
+        Route::get('trade-types', 'TradeTypeController');
+        Route::apiResource('orders', 'OrderController');
+    });
 });

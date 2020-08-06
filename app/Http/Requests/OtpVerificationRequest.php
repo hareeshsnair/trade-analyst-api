@@ -13,7 +13,7 @@ class OtpVerificationRequest extends FormRequest
      */
     public function authorize()
     {
-        return auth()->user()->currentAccessToken()->name === "auth" ? true : false;
+        return auth()->user()->currentAccessToken()->name === 'auth-'.$this->header('Device-id') ? true : false;
     }
 
     /**
