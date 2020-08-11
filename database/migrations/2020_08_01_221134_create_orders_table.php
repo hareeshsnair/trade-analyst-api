@@ -19,6 +19,7 @@ class CreateOrdersTable extends Migration
             $table->integer('stock_id');
             $table->integer('exchange_id');
             $table->integer('instrument_type_id');
+            $table->integer('portfolio_id')->nullable();
             $table->date('expiry_date')->nullable();
             $table->integer('strike_price')->nullable();
             $table->enum('option_type', ['ce', 'pe'])->nullable();
@@ -34,8 +35,7 @@ class CreateOrdersTable extends Migration
             $table->decimal('brokerage', 8,2)->nullable();
             $table->decimal('tax', 4,2)->nullable();
             $table->decimal('net_amount', 11,2)->nullable();
-            $table->date('bought_on')->nullable();
-            $table->date('sold_on')->nullable();
+            $table->date('trade_on')->nullable();
             $table->timestamps();
         });
     }

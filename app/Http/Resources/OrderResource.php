@@ -3,9 +3,15 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Traits\SerializeDate;
 
 class OrderResource extends JsonResource
 {
+    use SerializeDate;
+
+    protected $casts = [
+        'created_at' => 'datetime:Y-m',
+    ];
     /**
      * Transform the resource into an array.
      *
@@ -21,20 +27,20 @@ class OrderResource extends JsonResource
             "exchange_id" => $this->exchange_id,
             "instrument" => $this->instrument,
             "trade_type" => $this->tradeType,
-            "price" => null,
-            "qty" => null,
-            "is_mtf_opted" => 0,
-            "net_value" => null,
-            "pnl" => null,
-            "pnl_percentage" => null,
-            "net_pnl" => null,
-            "brokerage" => null,
-            "tax" => null,
-            "net_amount" => null,
-            "bought_on" => null,
-            "sold_on" => null,
-            "created_at" => null,
-            "updated_at" => null
+            "price" => $this->price,
+            "qty" => $this->qty,
+            "is_mtf_opted" => $this->is_mtf_opted,
+            "net_value" => $this->net_value,
+            "pnl" => $this->pnl,
+            "pnl_percentage" => $this->pnl_percentage,
+            "net_pnl" => $this->net_pnl,
+            "brokerage" => $this->brokerage,
+            "tax" => $this->tax,
+            "net_amount" => $this->net_amount,
+            "trade_on" => $this->trade_on,
+            'portfolio' => $this->portfolio,
+            "created_at" => $this->serializeTimezone($this->created_at),
+            "updated_at" => $this->serializeTimezone($this->updated_at)
         ];
     }
 }

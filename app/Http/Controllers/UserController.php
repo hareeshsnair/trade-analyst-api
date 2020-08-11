@@ -46,6 +46,8 @@ class UserController extends Controller
     {
         $user = auth()->user();
         
+        $this->token = $user->currentAccessToken();
+
         $this->validateOtp($user, $request);
 
         $user->is_mobile_verified = 1;
@@ -54,6 +56,7 @@ class UserController extends Controller
         DB::transaction(function () use ($user) {
             $user->otp->save();
             $user->save();
+            $user->tokens()->where('id', $this->token->id)->delete();
         }, 2);
         
         return response()->success([

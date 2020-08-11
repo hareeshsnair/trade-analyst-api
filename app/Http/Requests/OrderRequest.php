@@ -8,6 +8,7 @@ use App\Rules\OptionOrderTypeRule;
 use App\Rules\InstrumentTypeRule;
 use App\Rules\IsFutureDateRule;
 use App\Rules\WeekDayRule;
+use App\Rules\ExpiryDateRule;
 
 class OrderRequest extends FormRequest
 {
@@ -23,6 +24,10 @@ class OrderRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
+     * Order type: Buy/Sell
+     * Option type: CE/PE
+     * Trading type: Intraday/Delivery
+     * Instrument type: EQ/FnO
      *
      * @return array
      */
@@ -33,7 +38,11 @@ class OrderRequest extends FormRequest
             'exchange_id' => 'required|exists:stock_exchanges,id',
             'instrument_type_id' => 'required|exists:instrument_types,id',
             'trade_type_id' => 'required|exists:trade_types,id',
-            'expiry_date' => 'required_if:instrument_type_id,2,3|date_format:Y-m-d',
+            'expiry_date' => [
+                    'required_if:instrument_type_id,2,3',
+                    'date_format:Y-m-d',
+                    new ExpiryDateRule,
+                ],
             'strike_price' => 'required_if:instrument_type_id,3|numeric',
             'option_type' => [
                     'required_if:instrument_type_id,3', 
@@ -46,18 +55,18 @@ class OrderRequest extends FormRequest
             'price' => 'required|numeric',
             'qty' => 'required|integer',
             'is_mtf_opted' => 'required|boolean',
-            'bought_on' => [
-                    'required_if:order_type,b',
+            'trade_on' => [
+                    'required',
                     'date_format:Y-m-d',
                     new IsFutureDateRule,
                     new WeekDayRule,
                 ],
-            'sold_on' => [
-                    'required_if:order_type,s',
-                    'date_format:Y-m-d',
-                    new IsFutureDateRule,
-                    new WeekDayRule,
-                ],
+            // 'sold_on' => [
+            //         'required_if:order_type,s',
+            //         'date_format:Y-m-d',
+            //         new IsFutureDateRule,
+            //         new WeekDayRule,
+            //     ],
         ];
     }
 
@@ -69,8 +78,7 @@ class OrderRequest extends FormRequest
     public function messages()
     {
         return [
-            'bought_on.required_if' => 'Please select Bought On date',
-            'sold_on.required_if' => 'Please select Sold On date'
+            'trade_on.required' => 'Please select date',
         ];
     }
 }
