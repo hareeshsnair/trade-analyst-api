@@ -8,9 +8,12 @@ use App\Models\Order;
 use App\Models\Portfolio;
 use App\Http\Requests\OrderRequest;
 use App\Http\Resources\OrderResource;
+use App\Traits\OrderParams;
 
 class OrderController extends Controller
 {
+    use OrderParams;
+
     /**
      * Display a listing of the resource.
      *
@@ -48,21 +51,23 @@ class OrderController extends Controller
             })
             // ->toSql();
             ->latest()->first();
-// print_r($ordered);exit;
+// print_r($request->except(config('constants.order.create.except.'.$request->instrument_type_id)));exit;
         if(!$ordered)
         {
             // First time order on a stock
             DB::transaction(function () use ($request) {
-                $order = Order::create($request->all());
+                $order = Order::create($request->except(config('constants.order.create.except.'.$request->instrument_type_id)));
                 $portfolio = new Portfolio();
+                $params = $this->getParamsOnType($request);
+
                 $portfolio->user_id = $order->user_id;
-                $avgPrice = $request->order_type === 'b' ? 'avg_buy_price' : 'avg_sell_price';
-                $netValue = $request->order_type === 'b' ? 'net_buy_value' : 'net_sell_value';
-                $qty = $request->order_type === 'b' ? 'buy_qty' : 'sell_qty';
+                // $avgPrice = $request->order_type === 'b' ? 'avg_buy_price' : 'avg_sell_price';
+                // $netValue = $request->order_type === 'b' ? 'net_buy_value' : 'net_sell_value';
+                // $qty = $request->order_type === 'b' ? 'buy_qty' : 'sell_qty';
                 // $netQty = $request->order_type === 'b' ? 'net_buy_value' : 'net_sell_value';
-                $portfolio->$avgPrice = $order->price;
-                $portfolio->$qty = $order->qty;
-                $portfolio->$netValue = $order->price * $order->qty;
+                $portfolio->$params->avgPrice = $order->price;
+                $portfolio->$params->qty = $order->qty;
+                $portfolio->$params->netValue = $order->price * $order->qty;
                 $portfolio->save();
 
                 $order->portfolio_id = $portfolio->id;
@@ -103,15 +108,18 @@ class OrderController extends Controller
 
                         if($portfolio->$sAvgPrice)
                         {
+                            if($portfolio->$sQty < $portfolio->$qty)
+                                abort(422, 'There is no sufficient quantity to squareoff');
                             if($request->order_type === 's') {
+                                // echo $portfolio->$sQty."==".$portfolio->$qty;exit;return false;
                                 $portfolio->net_pnl =  ($portfolio->$avgPrice - $portfolio->$sAvgPrice) * $portfolio->$qty;
-                                if($portfolio->$sQty > $portfolio->$qty)
+                                if($portfolio->$sQty >= $portfolio->$qty)
                                     $order->pnl = ($request->price - $portfolio->$sAvgPrice) * $request->qty;
                             }
                             if($request->order_type === 'b') {
                                 // echo $portfolio->$sQty."==".$portfolio->$qty;exit;return false;
                                 $portfolio->net_pnl =  ($portfolio->$sAvgPrice - $portfolio->$avgPrice) * $portfolio->$qty;
-                                if($portfolio->$sQty > $portfolio->$qty)
+                                if($portfolio->$sQty >= $portfolio->$qty)
                                     $order->pnl = ($portfolio->$sAvgPrice - $request->price) * $request->qty;
                             }
                             if($portfolio->buy_qty === $portfolio->sell_qty) {
@@ -124,27 +132,27 @@ class OrderController extends Controller
                         $order->portfolio_id = $portfolio->id;
                         $order->save();
                     }, 2);
-                // }
-                // else {
-                //     DB::transaction(function () use ($request) {
-                //         $order = Order::create($request->all());
-                //         $portfolio = new Portfolio();
-                //         $portfolio->user_id = $order->user_id;
-                //         $avgPrice = $request->order_type === 'b' ? 'avg_buy_price' : 'avg_sell_price';
-                //         $netValue = $request->order_type === 'b' ? 'net_buy_value' : 'net_sell_value';
-                //         $qty = $request->order_type === 'b' ? 'buy_qty' : 'sell_qty';
-                //         // $netQty = $request->order_type === 'b' ? 'net_buy_value' : 'net_sell_value';
-                //         $portfolio->$avgPrice = $order->price;
-                //         $portfolio->$qty = $order->qty;
-                //         $portfolio->$netValue = $order->price * $order->qty;
-                //         $portfolio->save();
+                }
+                else {
+                    DB::transaction(function () use ($request) {
+                        $order = Order::create($request->all());
+                        $portfolio = new Portfolio();
+                        $portfolio->user_id = $order->user_id;
+                        $avgPrice = $request->order_type === 'b' ? 'avg_buy_price' : 'avg_sell_price';
+                        $netValue = $request->order_type === 'b' ? 'net_buy_value' : 'net_sell_value';
+                        $qty = $request->order_type === 'b' ? 'buy_qty' : 'sell_qty';
+                        // $netQty = $request->order_type === 'b' ? 'net_buy_value' : 'net_sell_value';
+                        $portfolio->$avgPrice = $order->price;
+                        $portfolio->$qty = $order->qty;
+                        $portfolio->$netValue = $order->price * $order->qty;
+                        $portfolio->save();
         
-                //         $order->portfolio_id = $portfolio->id;
-                //         $order->save();
-                //     }, 2);
-                // }
+                        $order->portfolio_id = $portfolio->id;
+                        $order->save();
+                    }, 2);
+                }
                 
-            }
+            // }
         }
 
         // print_r($ordered->isEmpty());exit;

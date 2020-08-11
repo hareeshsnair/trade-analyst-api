@@ -9,4 +9,19 @@ return [
         'BUY' => 'b',
         'SELL' => 's'
     ],
+    'order' => [
+        'create' => [
+            'except' => [
+                '1' => [
+                    'option_type',
+                    'strike_price',
+                    'expiry_date'
+                ],
+                '2' => [
+                    'option_type',
+                    'strike_price'
+                ]
+            ]
+        ]
+    ]
 ];
