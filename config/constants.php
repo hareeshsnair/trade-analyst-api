@@ -23,5 +23,18 @@ return [
                 ]
             ]
         ]
+    ],
+    'instruments' => [
+        'EQ' => 1,
+        'FUT' => 2,
+        'OPT' => 3
+    ],
+    'order_types' => [
+        'BUY' => 'b',
+        'SELL' => 's'
+    ],
+    'trades' => [
+        'INTRADAY' => 1,
+        'DELIVERY' => 2
     ]
 ];
