@@ -28,9 +28,24 @@ class User extends Authenticatable
         return $query->where('status', 1);
     }
 
-    public function trades()
+    public function orders()
     {
-        return $this->hasMany('App\Models\TradeHistory', 'user_id', 'id');
+        return $this->hasMany('App\Models\Order', 'user_id', 'id');
+    }
+
+    public function ordersCompleted()
+    {
+        return $this->hasMany('App\Models\Order', 'user_id', 'id')->pnl();
+    }
+
+    public function ordersCurMonth()
+    {
+        return $this->hasMany('App\Models\Order', 'user_id', 'id')->pnl()->month('current');
+    }
+
+    public function ordersPrevMonth()
+    {
+        return $this->hasMany('App\Models\Order', 'user_id', 'id')->pnl()->month('prev');
     }
 
     public function otp()

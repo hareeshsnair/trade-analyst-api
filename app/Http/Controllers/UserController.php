@@ -19,6 +19,14 @@ class UserController extends Controller
 {
     use OtpTrait;
 
+    /*
+     * Returns the details of the authenticated user
+     */
+    public function index()
+    {
+        return response()->success(new UserResource(auth()->user()));
+    }
+    
     /* 
      * User Authentication 
      */
@@ -62,14 +70,6 @@ class UserController extends Controller
         return response()->success([
             'token' => $user->createToken($request->header('Device-id'))->plainTextToken 
         ], 'OTP Verified');
-    }
-
-    /*
-     * Returns the details of the authenticated user
-     */
-    public function index()
-    {
-        return response()->success(new UserResource(auth()->user()));
     }
 
 }

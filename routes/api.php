@@ -24,5 +24,6 @@ Route::middleware(['auth:sanctum'])->group(function() {
         Route::get('instruments', 'InstrumentTypeController');
         Route::get('trade-types', 'TradeTypeController');
         Route::apiResource('orders', 'OrderController');
+        Route::get('get-pnl', 'AnalyseController@getPnl');
     });
 });

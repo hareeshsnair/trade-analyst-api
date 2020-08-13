@@ -17,4 +17,5 @@ class OrdersCollection extends ResourceCollection
     {
         return parent::toArray($request);
     }
+    
 }

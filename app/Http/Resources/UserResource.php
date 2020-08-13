@@ -3,8 +3,9 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\TradeResource;
-use App\Http\Resources\TradesCollection;
+use App\Http\Resources\OrderResource;
+use App\Http\Resources\OrdersCollection;
+
 
 class UserResource extends JsonResource
 {
@@ -16,11 +17,20 @@ class UserResource extends JsonResource
      */
     public function toArray($request)
     {
+        $curMnth = $this->ordersCurMonth->sum('pnl');
+        $prevMnth = $this->ordersPrevMonth->sum('pnl');
         return [
-            "id" => $this->id,
-            "name" => $this->name,
-            "mobile" => $this->mobile,
-            "trades" => new TradesCollection($this->trades)
+            'id' => $this->id,
+            'name' => $this->name,
+            'mobile' => $this->mobile,
+            'currency' => 'Rs',
+            'pnl' => [
+                'prevMonth' => $prevMnth,
+                'currentMonth' => $curMnth,
+                'total' => $this->ordersCompleted->sum('pnl'),
+                'growth' => $prevMnth ? ($curMnth - $prevMnth) / $prevMnth * 100 : $curMnth,
+            ],
+            // 'orders' => new OrdersCollection($this->orders)
         ];
     }
 }

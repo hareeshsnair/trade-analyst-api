@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Portfolio;
 use App\Http\Requests\OrderRequest;
 use App\Http\Resources\OrderResource;
+use App\Http\Resources\OrdersCollection;
 use App\Traits\OrderParams;
 use App\Traits\PortfolioTrait;
 
@@ -21,8 +22,8 @@ class OrderController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {
-        //
+    { 
+        return response()->success(new OrdersCollection(Order::mine()->latestTrade()->get()));
     }
 
     /**
@@ -35,7 +36,7 @@ class OrderController extends Controller
     {
         $this->init($request);
         $ordered = $this->searchOrder();
-
+// print_r($ordered);exit;
         if(!$ordered)
         {
             $this->validateShortSell();
@@ -68,34 +69,25 @@ class OrderController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Order  $order
      * @return \Illuminate\Http\Response
      */
-    public function show(Order $order)
+    public function show($id)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Order  $order
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Order $order)
-    {
-        //
+        return response()->success(new OrderResource(Order::mine()->where('id', $id)->first()));
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Order  $order
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Order $order)
+    public function destroy($id)
     {
-        //
+        $order = Order::where('id',$id)->active()->first();
+
+        if(!$order) {
+            return abort(400, 'Invalid request');
+        }
+        return response()->success($order->delete());
     }
 }

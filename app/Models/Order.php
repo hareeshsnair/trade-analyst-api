@@ -3,14 +3,48 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
 
 class Order extends Model
 {
-    
+    use SoftDeletes;
+
     protected $fillable = [
         'user_id', 'stock_id', 'exchange_id', 'instrument_type_id', 'trade_type_id', 'expiry_date', 
         'strike_price', 'option_type', 'order_type', 'price', 'qty', 'is_mtf_opted', 'trade_on'
     ];
+
+    public function scopeMine($query)
+    {
+        return $query->where('user_id', auth()->user()->id);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('deleted_at', null);
+    }
+
+    public function scopeLatestTrade($query)
+    {
+        return $query->orderBy('trade_on', 'desc');
+    }
+
+    public function scopePnl($query)
+    {
+        return $query->whereNotNull('pnl');
+    }
+
+    public function scopeMergeByDay($query)
+    {
+        return $query->groupBy('trade_on');
+    }
+
+    public function scopeMonth($query, $month)
+    {
+        $month = $month == 'current' ? Carbon::now()->month : Carbon::now()->subMonth()->month;
+        return $query->whereMonth('trade_on', $month);
+    }
 
     public function scopeEquity($query)
     {
