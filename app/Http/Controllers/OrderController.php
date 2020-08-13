@@ -9,11 +9,11 @@ use App\Models\Portfolio;
 use App\Http\Requests\OrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Traits\OrderParams;
-use App\Traits\OrderQueries;
+use App\Traits\PortfolioTrait;
 
 class OrderController extends Controller
 {
-    use OrderParams;
+    use OrderParams, PortfolioTrait;
 
     /**
      * Display a listing of the resource.
@@ -38,95 +38,31 @@ class OrderController extends Controller
 
         if(!$ordered)
         {
-            $this->createNewPortfolio($request);
+            $this->validateShortSell();
+            DB::transaction(function () {
+                $order = Order::create($this->getFillableParams());
+                $this->createNewPortfolio($order);
+            }, 2);
         }
         else {
-            // if($ordered->order_type === $request->order_type)
-            // {
-                $portfolio = Portfolio::find($ordered->portfolio_id);
-                // print_r();exit;
-                if($portfolio->status)
-                {
-                    
-                    // If there is any active portfolio available
-                    DB::transaction(function () use ($request, $portfolio) {
-                        
-                        $order = Order::create($this->getFillableParams());
-                        $params = $this->getParamsOnType();
-
-                        $avgPrice = $params->avgPrice;
-                        $netValue = $params->netValue;
-                        $qty = $params->qty;
-
-                        $sAvgPrice = $params->sAvgPrice;
-                        $sNetValue = $params->sNetValue;
-                        $sQty = $params->sQty;
-                        
-                        $portfolio->user_id = $order->user_id;
-                        $portfolio->$avgPrice = (($this->getNetValue($portfolio)) + ($this->getOrderedValue($order))) / ($portfolio->$qty+$order->qty);
-                        $portfolio->$qty = $portfolio->$qty + $order->qty;
-                        $portfolio->$netValue = $this->getNetValue($portfolio);
-
-                        if($portfolio->$sAvgPrice)
-                        {
-                            if($portfolio->$sQty < $portfolio->$qty)
-                                abort(422, 'There is no sufficient quantity to squareoff');
-                            if($request->order_type === 's') {
-                                // echo $portfolio->$sQty."==".$portfolio->$qty;exit;return false;
-                                $portfolio->net_pnl =  ($portfolio->$avgPrice - $portfolio->$sAvgPrice) * $portfolio->$qty;
-                                if($portfolio->$sQty >= $portfolio->$qty)
-                                    $order->pnl = ($request->price - $portfolio->$sAvgPrice) * $request->qty;
-                            }
-                            if($request->order_type === 'b') {
-                                // echo $portfolio->$sQty."==".$portfolio->$qty;exit;return false;
-                                $portfolio->net_pnl =  ($portfolio->$sAvgPrice - $portfolio->$avgPrice) * $portfolio->$qty;
-                                if($portfolio->$sQty >= $portfolio->$qty)
-                                    $order->pnl = ($portfolio->$sAvgPrice - $request->price) * $request->qty;
-                            }
-                            if($portfolio->buy_qty === $portfolio->sell_qty) {
-                                $portfolio->status = 0;
-                            }
-                        }
-
-                        $portfolio->save();
-        
-                        $order->portfolio_id = $portfolio->id;
-                        $order->save();
-                    }, 2);
-                }
-                else {
-                    $this->createNewPortfolio($request);
-                }
+            $portfolio = Portfolio::find($ordered->portfolio_id);
                 
-            // }
+            if($portfolio->status) {
+                DB::transaction(function () use ($portfolio) {
+                    $order = Order::create($this->getFillableParams());
+                    $this->updatePortfolio($portfolio, $order);
+                }, 2);  
+            }
+            else {
+                $this->validateShortSell();
+                DB::transaction(function () {
+                    $order = Order::create($this->getFillableParams());
+                    $this->createNewPortfolio($order);
+                }, 2);
+            }
         }
 
         return response()->success('created');
-    }
-
-    protected function createNewPortfolio($request)
-    {
-        // First time order on a stock
-        $this->validateShortSell();
-        DB::transaction(function () use ($request) {
-            $order = Order::create($this->getFillableParams());
-            $portfolio = new Portfolio();
-            $params = $this->getParamsOnType();
-
-            $avgPrice = $params->avgPrice;
-            $netValue = $params->netValue;
-            $qty = $params->qty;
-            
-            $portfolio->user_id = $order->user_id;
-            $portfolio->$avgPrice = $order->price;
-            $portfolio->$qty = $order->qty;
-            $portfolio->$netValue = $order->price * $order->qty;
-
-            $portfolio->save();
-
-            $order->portfolio_id = $portfolio->id;
-            $order->save();
-        }, 2);
     }
 
     /**

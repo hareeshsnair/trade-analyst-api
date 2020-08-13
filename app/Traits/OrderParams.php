@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Order;
 
 trait OrderParams
