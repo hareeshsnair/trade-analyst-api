@@ -23,7 +23,7 @@ class OrderController extends Controller
      */
     public function index()
     { 
-        return response()->success(new OrdersCollection(Order::mine()->latestTrade()->get()));
+        return response()->success(new OrdersCollection(Order::mine()->latestTrade()->latest()->get()));
     }
 
     /**
