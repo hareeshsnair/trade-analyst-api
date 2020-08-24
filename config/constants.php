@@ -36,5 +36,11 @@ return [
     'trades' => [
         'INTRADAY' => 1,
         'DELIVERY' => 2
+    ],
+    'chart_filters' => [
+        'week',
+        'month',
+        'quarter',
+        'year'
     ]
 ];

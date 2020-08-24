@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\ChartFiltersRule;
 
 class GetPnlRequest extends FormRequest
 {
@@ -24,7 +25,7 @@ class GetPnlRequest extends FormRequest
     public function rules()
     {
         return [
-            'filter_by' => 'sometimes|string',
+            'filter_by' => ['sometimes','string', new ChartFiltersRule],
             'prev' => 'sometimes|integer'
         ];
     }
@@ -33,7 +34,6 @@ class GetPnlRequest extends FormRequest
     {
         return [
             'prev.integer' => 'Invalid filter data passed',
-            'filter_by.string' => 'Invalid filter data passed'
         ];
     }
 }
