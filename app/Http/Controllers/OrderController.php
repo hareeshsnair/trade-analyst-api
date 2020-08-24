@@ -36,7 +36,7 @@ class OrderController extends Controller
     {
         $this->init($request);
         $ordered = $this->searchOrder();
-// print_r($ordered);exit;
+
         if(!$ordered)
         {
             $this->validateShortSell();

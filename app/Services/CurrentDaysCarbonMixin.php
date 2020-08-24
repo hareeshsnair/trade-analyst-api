@@ -3,20 +3,10 @@
 namespace App\Services;
 
 use Carbon\Carbon;
-// use Illuminate\Support\Facades\Date;
-// use Illuminate\Support\DateFactory;
-// use Carbon\CarbonImmutable;
+use Carbon\CarbonImmutable;
 
 class CurrentDaysCarbonMixin 
 {
-    // protected $start;
-    // protected $end;
-
-    function __construct() 
-    {
-        // DateFactory::use(CarbonImmutable::class);
-    }
-
     public static function weekStart()
     {
         return static function() {
@@ -31,19 +21,79 @@ class CurrentDaysCarbonMixin
         };
     }
 
+    public static function firstWeekdayOfMonth()
+    {
+        return static function() {
+            return self::this()->startOfMonth()->isWeekday() ? 
+                        self::this()->startOfMonth() : self::this()->startOfMonth()->nextWeekday(); 
+        };
+    }
+
+    public static function lastWeekdayOfMonth()
+    {
+        return static function() {
+            return self::this()->endOfMonth()->isWeekday() ? 
+                        self::this()->endOfMonth() : self::this()->endOfMonth()->previousWeekday();
+        };
+    }
+
+    public static function getParsedWeekDays()
+    {
+        return static function() {
+            return CarbonImmutable::parse(self::this()->weekStart())->daysUntil(self::this()->weekEnd());
+        };
+    }
+
     public static function getCurrentWeekDays()
     {
         return static function () { 
-            // return self::this();
-            // echo $a;exit;
-            $startOfWeek = self::this()->startOfWeek()->format('Y-m-d');
-            $weekDays = [];
+            $period = self::this()->getParsedWeekDays();
 
-            for ($i = 0; $i < 5; $i++) {
-                $weekDays[] = $startOfWeek->addDays($i)->copy()->format('d');//->startOfDay()->copy();
+            $weekDays = [];
+            foreach ($period as $key => $value) {
+                $weekDays[] = $value;
             }
 
             return $weekDays;
+        };
+    }
+
+    public static function getParsedMonthWeeks()
+    {
+        return static function() {
+            return CarbonImmutable::parse(self::this()->startOfMonth())->weeksUntil(self::this()->endOfMonth());
+        };
+    }
+
+    public static function getBusinessMonthWeeks()
+    {
+        return static function() {
+            $firstDay = self::this()->firstWeekdayOfMonth();
+            $lastDay = self::this()->lastWeekdayOfMonth();
+            $period = CarbonImmutable::parse($firstDay)->weeksUntil($lastDay);
+            
+            $weekDays = [];
+            foreach ($period as $key => $value) {
+                $weekDays[] = [
+                    $value->weekStart()->isSameMonth($firstDay) ? $value->weekStart() : $firstDay,
+                    $value->weekEnd()->isSameMonth($lastDay) ? $value->weekEnd() : $lastDay
+                ];
+            }
+            return $weekDays;
+        };
+    }
+
+    public static function getParsedQuarterMonths()
+    {
+        return static function() {
+            return CarbonImmutable::parse(self::this()->startOfQuarter())->monthsUntil(self::this()->endOfQuarter());
+        };
+    }
+
+    public static function getParsedYearQuarters()
+    {
+        return static function() {
+            return CarbonImmutable::parse(self::this()->startOfYear())->quartersUntil(self::this()->endOfYear());
         };
     }
 }

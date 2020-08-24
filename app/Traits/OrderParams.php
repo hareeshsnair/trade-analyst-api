@@ -5,9 +5,13 @@ namespace App\Traits;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Order;
+use App\Traits\CarbonTrait;
+use App\Traits\ChartIntervalsTrait;
 
 trait OrderParams
 {
+    use CarbonTrait, ChartIntervalsTrait;
+
     private $request;
 
     private $avgPrice;
@@ -100,5 +104,37 @@ trait OrderParams
             })
             // ->toSql();
             ->latest()->first();
+    }
+
+    public function getIntervals($data)
+    {
+        switch($this->filter)
+        {
+            case 'week': return $this->getWeekIntervals($data);
+            case 'month': return $this->getMonthIntervals($data);
+            case 'quarter': return $this->getQuarterIntervals($data);
+            case 'year': return $this->getYearIntervals($data);
+            default: return [];
+        }
+    }
+
+    public function getTradekey()
+    {
+        return [
+            'week' => 'day',
+            'month' => 'week',
+            'quarter' => 'month',
+            'year' => 'quarter'
+        ];
+    }
+
+    public function getdurationFormat()
+    {
+        return [
+            'week' => 'd M',
+            'month' => 'd M',
+            'quarter' => 'd M Y',
+            'year' => 'M Y'
+        ];
     }
 }

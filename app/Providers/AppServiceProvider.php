@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+// use Carbon\Carbon;
 use App\Observers\UserObserver;
 use App\Observers\OtpObserver;
 use App\Observers\OrderObserver;
@@ -32,6 +33,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Carbon::setWeekStartsAt(Carbon::TUESDAY);
+        // Carbon::setWeekEndsAt(Carbon::SUNDAY);
+
         User::observe(UserObserver::class);
         Otp::observe(OtpObserver::class);
         Order::observe(OrderObserver::class);
